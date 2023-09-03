@@ -1,0 +1,51 @@
+https://redos.red-soft.ru/base/server-configuring/customize-dns/customize-dns-bind/
+
+yum install bind -y
+systemctl enable named --now
+systemctl status named
+nano /etc/named.conf
+	listen-on port 53 { 127.0.0.1; 192.168.1.100; };
+	listen-on-v6 port 53 { none; };
+	allow-query { any; };
+	forward first;
+	forwarders { 10.1.1.100; };
+	
+	zone "branch.company.work" {
+	type master;
+	file "master/zone.br";
+	};
+	
+	zone "168.192.in-addr.arpa" {
+    type master;
+    file "master/168.192.br.zone";
+	};
+
+nano /var/named/master/zone.br
+	$TTL 604800       ;
+	branch.company.work.    IN      SOA     br-dc23.branch.company.work admin.branch.company.work. (
+					1               ; Serial
+					600             ; Refresh
+					3600            ; Retry
+					1w              ; Expire
+					360             ; Minimum TTL
+					)
+			IN      NS      br-dc23.branch.company.work.
+	br-rtr  IN      A       192.168.1.1
+	br-rtr  IN      A       192.168.2.1
+	br-srv1 IN      A       192.168.1.150
+	br-cli  IN      A       192.168.2.200
+	
+nano /var/named/master/168.192.zone.br
+	$TTL    3600
+	@  		IN      SOA     br-dc23.branch.company.work admin.branch.company.work. (
+						   20060204        ; Serial
+						   3600            ; Refresh
+						   900             ; Retry
+						   3600000         ; Expire
+						   3600 )          ; Minimum
+	@ 		IN      NS      br-dc23.branch.company.work.
+			IN      PTR     br-dc23
+	1.1 	IN      PTR     br-rtr
+	2.1 	IN      PTR     br-rtr
+	1.150 	IN      PTR     br-srv1
+	2.200 	IN      PTR     br-cli
