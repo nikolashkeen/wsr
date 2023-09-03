@@ -13,11 +13,13 @@ nano /etc/named.conf
 	zone "branch.company.work" {
 	type master;
 	file "master/zone.br";
+	allow update { 192.168.1.1; 192.168.2.1; }
 	};
 	
 	zone "168.192.in-addr.arpa" {
     type master;
     file "master/168.192.br.zone";
+	allow update { 192.168.1.1; 192.168.2.1; }
 	};
 
 nano /var/named/master/zone.br
@@ -49,3 +51,5 @@ nano /var/named/master/168.192.zone.br
 	2.1 	IN      PTR     br-rtr
 	1.150 	IN      PTR     br-srv1
 	2.200 	IN      PTR     br-cli
+	
+На рутере
