@@ -1,0 +1,56 @@
+DEBIAN BASIC
+1. Настройка ipconf
+	конф файл - etc/network/interfaces
+2. Включение nat
+	конф файл - etc/sysctl/conf
+	расскомментуруй - net.ipv4.ip_forward=1
+3. vlan 
+	скачай vlan 
+	включи вланы modprobe 8021q
+
+GRE { действия ниже пужно повторить для двух рутеров
+скрипт на двух рутерах
+nano etc/script.sh
+	#!/bin/bash
+	ip tunnel add tun1 mode gre local <ip1> remote <ip2> ttl 64
+	ip link set tun1 up
+	ip addr add <ip которые передаешь> dev tun1
+задать права = chmod +x etc/script.sh
+добавить в автозапуск - crontab = nano /etc/crontab
+	@reboot root etc/script.sh
+}
+
+IPSEC действия ниже пужно повторить для двух рутеров {
+apt install strongswan frr
+nano /etc/ipsec.conf
+	conn vpn
+		auto=start
+		type=tunnel
+		authby=secret
+		left=<ip of local rtr>
+		right=<ip of remote rtr>
+		leftsubnet=0.0.0.0/0
+		rightsubnet=0.0.0.0/0
+		ike=aes128-sha256-modp3072
+		esp=aes128-sha256
+
+nano /etc/ipsec.secrets
+	<ip of local> : PSK "P@ssw0rd"
+}
+
+OSPF действия ниже пужно повторить для двух рутеров {
+nano etc/frr/daemons
+	ospfd=yes
+systemctl restart frr
+vtysh
+	>conf t
+		>router ospf
+			network <ip translate> area 0
+			...
+			passive interface default
+		>do wr
+}
+
+NAT {
+
+
