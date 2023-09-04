@@ -1,0 +1,35 @@
+CA
+ipa service-add-host --host=hq-dc23.company.work HTTP/www.company.work
+ipa-getcert request -r -f /tmp/www.crt -k /tmp/www.key -N CN=www.company.work -D www.company.work -K HTTP/www.company.work 
+scp /tmp/www.* user@10.1.1.150:/home/user/
+
+SRV
+ipa-getkeytab -s hq-dc23.company.work -p HTTP/www.company.work -k /etc/httpd/kerberos.keytab
+mw /home/user/www.* /etc/httpd/
+yum install httpd -y
+cd /etc/httpd/conf.d/
+nano sso.conf
+	<VirtualHost *:443>
+		ServerName www.company.work
+		DocumentRoot /var/www/html/
+		SSLEngine on
+		SSLCertificateFile /etc/httpd/www.crt
+		SSLCertificateKeyFile /etc/httpd/www.key
+		<Location />
+		AuthType Kerberos
+		KrbAuthRealms COMPANY.WORK
+		KrbServiceName HTTP/www.company.work@COMPANY.WORK
+		Krb5Keytab /etc/httpd/ketberos.keytab
+		KrbMethodNegotiate on
+		KrbMethodK5Passwd off
+		require valid-user
+		KrbSaveCredentials on
+		ErrorDocument 401 "We are waiting for with us!"
+		</Location>
+	</VirtualHost>
+nano /etc/httpd/conf/httpd.conf
+	Listen 443
+kinit admin
+
+nano /var/www/html/index.html
+	Wellcome to work, collegues!
