@@ -1,0 +1,48 @@
+yum install bind bind-dyndb-ldap ipa-server ipa-server-dns ipa-server-trust-ad -y
+DNS 94.232.137.104
+chronyc sources
+timedatectl
+
+#после установки kinit admin
+
+#установка на все сервера ipa-client
+
+#script to add users
+vim ipausers.sh
+	#!/bin/bash
+	ipa group-add BRANCH
+	ipa group-add main
+	ipa group-add BusinessTripUser
+	ipa group-add Adminis
+	for i in {1..10};
+		echo P@ssw0rd | ipa user-add user$i --first=user --last=$i --password
+		ipa group-add-member BRANCH --user=user$i
+	done
+	for i in {11..20};
+		echo P@ssw0rd | ipa user-add user$i --first=user --last=$i --password
+		ipa group-add-member main --user=user$i
+	done
+	for i in {21..30};
+		echo P@ssw0rd | ipa user-add user$i --first=user --last=$i --password
+		ipa group-add-member BusinessTripUser --user=user$i
+	done
+	for i in {1..3};
+		echo P@ssw0rd | ipa user-add Admin$i --first=user --last=$i --password
+		ipa group-add-member Admins --user=Admin$i
+	done
+
+#для ddns DHCP
+В web прописать
+
+в консоле
+rndc-confgen -a -b 256 - создаем ключ
+nano /etc/rmdc.key
+	+include "/etc/rmdc.key"
+ipactl restart
+scp /etc/rmdc.key user@10.10.2.200:/home/user - передаем ключ на dhcp сервер
+
+на dhcp сервере
+cp /home/user/rmdc.key /etc/ 
+
+https://itproblog.ru/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B8-%D0%BD%D0%B0%D1%81%D1%82%D1%80%D0%BE%D0%B9%D0%BA%D0%B0-freeipa/
+https://redos.red-soft.ru/base/arm/arm-domen/redos-in-ipa/
