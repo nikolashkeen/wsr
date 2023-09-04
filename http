@@ -9,6 +9,14 @@ mw /home/user/www.* /etc/httpd/
 yum install httpd -y
 cd /etc/httpd/conf.d/
 nano sso.conf
+	<VirtualHost *:80>
+   		ServerName www
+   		Redirect permanent / https://mysite.example.com/
+	</VirtualHost>
+	<VirtualHost *:80>
+   		ServerName mysite.example.com
+   		Redirect permanent / https://mysite.example.com/
+	</VirtualHost>
 	<VirtualHost *:443>
 		ServerName www.company.work
 		DocumentRoot /var/www/html/
