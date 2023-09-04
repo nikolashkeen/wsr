@@ -1,0 +1,60 @@
+CA
+добавляем в FreeIPA в "идентификация - службы" домен registry
+kinit admin
+ipa service-add-host --host=hq-dc23.company.work HTTP/registry.company.work
+ipa-getcert request -r -f /tmp/dkr1.crt -k /tmp/dkr1.key -N CN=registry.company.work -D registry.company.work -K HTTP/registry.company.work  
+scp /tmp/dkr1.* user@10.1.2.200:/home/user/
+копируем CN=Certificate Authority,O=COMPANY.WORK
+scp /etc/ca.crt user@10.1.2.200:/home/user/
+
+HQ-DKR
+dnf install docker-ce docker-ce-cli
+systemctl enable docker --now
+mkdir certs
+cp /home/user/dkr1.* ./certs/  
+docker run -d --restart=always --name registry -u /root/certs:/certs -e REGISTRY_HTTP_ADDR=0.0.0.0:443 -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/dkr1.crt -e REGISTRY_HTTP_TLS_KEY=/certs/dkr1.key -p 443:443 registry:2
+mkdir /opt/Docker
+cd /opt/Docker
+nano Dockerfile
+	FROM registry.red-soft.ru/ubi7/ubi1
+	RUN	dnf install httpd -y
+	COPY index.html /usr/share/httpd/moindex/index.html
+	EXPOSE 80
+	CMD ["httpd","-D","FOREGROUND"]
+nano index.html
+	Hello, its my own Docker image!
+docker build -t registry.company.work/red-httpd .
+cp /home/user/ca.crt /etc/pki/ca-trust/source/anchors
+update-ca-trust external
+openssl verify /home/user/ca.crt
+systemctl restart docker
+docker push registry.company.work/red-httpd
+
+
+
+
+
+
+docker -v							//Версия Docker Engine
+docker ps							//Список Бегущих контейнеров
+docket ps -a						//Список ВСЕХ контейнеров
+docker images						//Список локальных Images 
+docker search tomcat				//Найти Image tomcat в DockerHub
+docker pull tomcat					//Скачать Image tomcat из DockerHub
+docker run -it -p 7777:8080 tomcat	//Запустить интерактивно контейнер  tomcat на порте 7777
+docker run -d -p 8888:8080 tomcat	//Запустить НЕинтерактивно контейнер  tomcat на порте 8888
+docker run -d -p 80:80 nginx		//Запустить НЕинтерактивно контейнер  nginx на порте 80
+docker tag oldname:v1  newname:v2	//Создать копию Image с другим именем и тагом
+docker build -t myimage:latest .	//Создать Image с именем myimage:latest из локального Dockerfile
+docker run -d myimage:latest		//Запустить НЕинтерактивно контейнер myimage:latest
+docker rm 1234567890				//Удалить контейнер с ID 1234567890
+docker rmi 1112227778				//Удалит локальный Image с ID 1112227778
+docker exec -it 5267e21d140 /bin/bash	//Запустить интерактивно /bin/bash на контейнере с ID 5267e21d140
+echo "New Version v2" >> /var/www/html/index.html	//Изменить файл в контейнере
+docker commit 5267e21d140  newimage_v2:latest	//Создать Image с именем newimage_v2:latest из контейнера с ID 5267e21d140
+
+//////////////////////////////
+образы  
+https://wiki.astralinux.ru/pages/viewpage.action?pageId=137563067
+https://redos.red-soft.ru/base/arm/arm-other/docker-install/
+https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04-ru
