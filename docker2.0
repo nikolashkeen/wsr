@@ -5,7 +5,7 @@ ipa service-add-host --host=hq-dc23.company.work HTTP/registry.company.work
 ipa-getcert request -r -f /tmp/dkr1.crt -k /tmp/dkr1.key -N CN=registry.company.work -D registry.company.work -K HTTP/registry.company.work  
 scp /tmp/dkr1.* user@10.1.2.200:/home/user/
 копируем CN=Certificate Authority,O=COMPANY.WORK
-scp /etc/ca.crt user@10.1.2.200:/home/user/
+scp /etc/ipa/ca.crt user@10.1.2.200:/home/user/
 
 HQ-DKR
 dnf install docker-ce docker-ce-cli
